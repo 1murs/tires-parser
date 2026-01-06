@@ -1,0 +1,45 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+tires-parser
+tires-parser.exe
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Go workspace file
+go.work
+
+# Dependency directories
+vendor/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Output files
+*.xlsx
+*.xls
+
+# Config files (if they contain sensitive data)
+categories.json
+
+# Word lists (optional - uncomment if you want to track them)
+# bad_words.txt
+# del_item_words.txt
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
