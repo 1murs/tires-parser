@@ -43,3 +43,5 @@ Thumbs.db
 
 # Log files
 *.log
+!cmd/tires-parser/
+!cmd/tires-parser/main.go
