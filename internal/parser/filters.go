@@ -1,6 +1,9 @@
 package parser
 
-import "strings"
+import (
+	"regexp"
+	"strings"
+)
 
 func (p *TiresParser) checkItemName(itemName []string) ([]string, bool) {
 	filtered := make([]string, 0)
@@ -34,4 +37,14 @@ func roundFloat(val float64, precision int) float64 {
 		ratio *= 10
 	}
 	return float64(int(val*ratio+0.5)) / ratio
+}
+
+func (p *TiresParser) normalizeName(name string) string {
+	dotRegex := regexp.MustCompile(`DOT\d{4}`)
+	normalized := dotRegex.ReplaceAllString(name, "")
+
+	normalized = strings.Join(strings.Fields(normalized), " ")
+	normalized = strings.TrimSpace(normalized)
+
+	return strings.ToLower(normalized)
 }

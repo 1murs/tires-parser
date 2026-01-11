@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
 	"tires-parser/internal/models"
 
 	"github.com/PuerkitoBio/goquery"
@@ -67,6 +68,12 @@ func (p *TiresParser) processHTML(html string) (string, error) {
 
 		name := strings.Join(filteredName, " ")
 
+		// Ne code for studdet tires
+
+		normalizedName := p.normalizeName(name)
+
+		isStudded := p.StuddedTires[normalizedName]
+
 		var year int
 		if match := dotRegex.FindStringSubmatch(name); len(match) > 1 {
 			year, _ = strconv.Atoi(match[1])
@@ -83,10 +90,14 @@ func (p *TiresParser) processHTML(html string) (string, error) {
 		}
 
 		finalPrice := price*(1+p.PricePercentage/100) + 20
+		displayName := name
+		if isStudded {
+			displayName = name + " -STUD"
+		}
 
 		p.Mu.Lock()
 		p.Data = append(p.Data, models.TireData{
-			Name:     name,
+			Name:     displayName,
 			Quantity: 8,
 			Year:     year,
 			Country:  "",

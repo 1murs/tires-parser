@@ -2,11 +2,15 @@ package parser
 
 import (
 	"fmt"
-	"github.com/xuri/excelize/v2"
+	"strings"
 	"sync"
+
 	"tires-parser/internal/config"
 	"tires-parser/internal/models"
 	"tires-parser/internal/storage"
+
+	"github.com/PuerkitoBio/goquery"
+	"github.com/xuri/excelize/v2"
 )
 
 type TiresParser struct {
@@ -15,6 +19,7 @@ type TiresParser struct {
 	DelItemWords    []string
 	Categories      []models.Category
 	PricePercentage float64
+	StuddedTires    map[string]bool
 	Mu              sync.Mutex
 }
 
@@ -25,10 +30,14 @@ func New(categories []models.Category, percentage float64) *TiresParser {
 		DelItemWords:    storage.LoadWordsFromFile(config.DelWordsFile),
 		Categories:      categories,
 		PricePercentage: percentage,
+		StuddedTires:    make(map[string]bool),
 	}
 }
 
 func (p *TiresParser) Run() error {
+	fmt.Println("\n🔍 Збір інформації про шиповані шини...")
+	p.collectStuddedTires()
+
 	var wg sync.WaitGroup
 
 	for _, cat := range p.Categories {
@@ -121,4 +130,57 @@ func (p *TiresParser) saveToExcel(tableName string) error {
 	fmt.Printf("   ✅ %s.xlsx - збережено %d товарів\n", tableName, len(p.Data))
 	p.Data = p.Data[:0]
 	return nil
+}
+
+func (p *TiresParser) collectStuddedTires() {
+	studdedURL := "https://rengasketola.fi/shop/category/renkaat-talvirenkaat-nastarenkaat-5"
+	currentURL := studdedURL
+
+	for currentURL != "" {
+		html, err := p.request(currentURL)
+		if err != nil {
+			break
+		}
+		nextPage, err := p.extractStuddedNames(html)
+		if err != nil {
+			break
+		}
+
+		if nextPage == "" {
+			break
+		}
+
+		currentURL = config.BaseURL + nextPage
+	}
+	fmt.Printf("   ✅ Найдено %d шипованих шин \n\n", len(p.StuddedTires))
+}
+
+func (p *TiresParser) extractStuddedNames(html string) (string, error) {
+	doc, err := goquery.NewDocumentFromReader(strings.NewReader(html))
+	if err != nil {
+		return "", err
+	}
+	doc.Find(".tp-product-item-grid-1").Each(func(i int, item *goquery.Selection) {
+		nameText := item.Find(".tp-product-title").Text()
+		nameWords := strings.Fields(nameText)
+
+		filteredName, shouldDelete := p.checkItemName(nameWords)
+		if shouldDelete {
+			return
+		}
+
+		name := strings.Join(filteredName, " ")
+		// Нормализуем название (убираем DOT, лишние пробелы)
+		normalizedName := p.normalizeName(name)
+
+		p.Mu.Lock()
+		p.StuddedTires[normalizedName] = true
+		p.Mu.Unlock()
+	})
+	nextPage, exists := doc.Find("a.tp-load-more-on-scroll").Attr("href")
+	if exists {
+		return nextPage, nil
+	}
+
+	return "", nil
 }
