@@ -22,7 +22,7 @@ A Go-based web scraper for extracting tire product information from rengasketola
 1. Clone the repository:
 
 ```bash
-git clone <repository-url>
+git clone git@github.com:1murs/tires-parser.git
 cd tires-parser
 ```
 
