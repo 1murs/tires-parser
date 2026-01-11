@@ -103,7 +103,12 @@ func (p *TiresParser) saveToExcel(tableName string) error {
 		row := i + 2
 		f.SetCellValue(tableName, fmt.Sprintf("A%d", row), item.Name)
 		f.SetCellValue(tableName, fmt.Sprintf("B%d", row), item.Quantity)
-		f.SetCellValue(tableName, fmt.Sprintf("C%d", row), item.Year)
+		if item.Year == 0 {
+			f.SetCellValue(tableName, fmt.Sprintf("C%d", row), "")
+		} else {
+			f.SetCellValue(tableName, fmt.Sprintf("C%d", row), item.Year)
+		}
+		// f.SetCellValue(tableName, fmt.Sprintf("C%d", row), item.Year)
 		f.SetCellValue(tableName, fmt.Sprintf("D%d", row), item.Country)
 		f.SetCellValue(tableName, fmt.Sprintf("E%d", row), item.Price)
 	}
